@@ -1,434 +1,384 @@
-import React, { useState, useMemo, useEffect } from 'react';
-import { initializeApp } from 'firebase/app';
-import { 
-  getFirestore, 
-  doc, 
-  setDoc, 
-  onSnapshot 
-} from 'firebase/firestore';
-import { 
-  getAuth, 
-  signInWithCustomToken, 
-  signInAnonymously, 
-  onAuthStateChanged 
-} from 'firebase/auth';
-import { 
-  LayoutDashboard, 
-  Users, 
-  Video, 
-  PenTool, 
-  MessageSquare, 
-  TrendingUp, 
-  AlertCircle, 
-  Download, 
-  Plus, 
-  BarChart3, 
-  Activity,
-  Sparkles,
-  Clock,
-  Target,
-  PlusCircle,
-  MoreHorizontal,
-  X,
-  Briefcase,
-  Trash2
-} from 'lucide-react';
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>ES KULKUL PRO</title>
 
-// --- FIREBASE CONFIGURATION ---
-const firebaseConfig = JSON.parse(__firebase_config);
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getFirestore(app);
-const appId = typeof __app_id !== 'undefined' ? __app_id : 'manager-hub-pro';
+  <!-- Tailwind -->
+  <script src="https://cdn.tailwindcss.com"></script>
 
-// Helper untuk render ikon berdasarkan string nama
-const IconRenderer = ({ iconName, size = 16 }) => {
-  const icons = {
-    'overview': <LayoutDashboard size={size}/>,
-    'program': <Users size={size}/>,
-    'cs': <MessageSquare size={size}/>,
-    'creative': <Video size={size}/>,
-    'copywriting': <PenTool size={size}/>,
-    'briefcase': <Briefcase size={size}/>
-  };
-  return icons[iconName] || <Briefcase size={size}/>;
-};
+  <!-- React -->
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
 
-const App = () => {
-  const [user, setUser] = useState(null);
-  const [activeDivisi, setActiveDivisi] = useState('overview');
-  const [showAiInsight, setShowAiInsight] = useState(false);
-  const [aiLoading, setAiLoading] = useState(false);
-  const [aiAnalysis, setAiAnalysis] = useState("");
-  
-  const [isModalDivisiOpen, setIsModalDivisiOpen] = useState(false);
-  const [newDivisiName, setNewDivisiName] = useState('');
-  const [isModalTaskOpen, setIsModalTaskOpen] = useState(false);
-  const [taskForm, setTaskForm] = useState({ status: 'On Track' });
+  <!-- Babel -->
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 
-  // Data awal
-  const [data, setData] = useState({
-    program: [
-      { id: 'prog-1', name: 'Beasiswa Yatim', pm: 85, target: 100, kpi: 85, status: 'On Track' },
-      { id: 'prog-2', name: 'Pangan Sehat', pm: 40, target: 150, kpi: 26, status: 'High Alert' },
-    ],
-    cs: [
-      { id: 'cs-1', name: 'Admin 1', leads: 45, responseTime: '2 min', conversion: '65%', status: 'Excellent' },
-      { id: 'cs-2', name: 'Admin 2', leads: 38, responseTime: '15 min', conversion: '30%', status: 'Slow Response' },
-    ],
-    creative: [
-      { id: 'cre-1', title: 'Video Profil Yayasan', type: 'Video', deadline: '2024-05-20', viralScore: 88, status: 'Editing' },
-      { id: 'cre-2', title: 'Poster Donasi', type: 'Design', deadline: '2024-05-12', viralScore: 45, status: 'Overdue' },
-    ],
-    copywriting: [
-      { id: 'copy-1', campaign: 'Sedekah Subuh', platform: 'Instagram', ctr: '4.2%', status: 'High Performance' },
-      { id: 'copy-2', campaign: 'Wakaf Sumur', platform: 'WhatsApp', ctr: '1.5%', status: 'Low CTR' },
-    ]
-  });
+  <!-- Recharts -->
+  <script src="https://unpkg.com/recharts/umd/Recharts.min.js"></script>
 
-  // Tabs hanya menyimpan nama ikon agar bisa disimpan di Firestore
-  const [tabs, setTabs] = useState([
-    { id: 'overview', label: 'Overview', iconName: 'overview' },
-    { id: 'program', label: 'Program', iconName: 'program' },
-    { id: 'cs', label: 'Fundraising/CS', iconName: 'cs' },
-    { id: 'creative', label: 'Creative', iconName: 'creative' },
-    { id: 'copywriting', label: 'Copywriting', iconName: 'copywriting' },
-  ]);
+  <!-- Lucide -->
+  <script src="https://unpkg.com/lucide@latest"></script>
 
-  // Auth initialization
-  useEffect(() => {
-    const initAuth = async () => {
-      try {
-        if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-          await signInWithCustomToken(auth, __initial_auth_token);
-        } else {
-          await signInAnonymously(auth);
-        }
-      } catch (err) {
-        console.error("Auth error:", err);
-      }
+  <!-- Firebase -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+    import {
+      getFirestore,
+      collection,
+      addDoc,
+      onSnapshot,
+      query,
+      deleteDoc,
+      doc,
+      updateDoc
+    } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+    import {
+      getAuth,
+      signInAnonymously,
+      onAuthStateChanged
+    } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+
+    window.firebaseModules = {
+      initializeApp,
+      getFirestore,
+      collection,
+      addDoc,
+      onSnapshot,
+      query,
+      deleteDoc,
+      doc,
+      updateDoc,
+      getAuth,
+      signInAnonymously,
+      onAuthStateChanged
     };
-    initAuth();
-    const unsubscribe = onAuthStateChanged(auth, setUser);
-    return () => unsubscribe();
-  }, []);
+  </script>
+</head>
 
-  // Sync from Cloud
-  useEffect(() => {
-    if (!user) return;
+<body class="bg-slate-50">
+  <div id="root"></div>
 
-    // RULE 1: Segmen harus genap. Path: artifacts / {appId} / public / data / {collection} / {docId}
-    const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'dashboard_state', 'main');
+  <script type="text/babel">
 
-    const unsubscribe = onSnapshot(docRef, (docSnap) => {
-      if (docSnap.exists()) {
-        const cloudState = docSnap.data();
-        if (cloudState.data) setData(cloudState.data);
-        if (cloudState.tabs) setTabs(cloudState.tabs);
-      } else {
-        // Initial Save
-        setDoc(docRef, { data, tabs });
-      }
-    }, (error) => {
-      console.error("Cloud Sync Error:", error);
-    });
+    const {
+      useState,
+      useEffect,
+      useMemo
+    } = React;
 
-    return () => unsubscribe();
-  }, [user]);
+    const {
+      AreaChart,
+      Area,
+      XAxis,
+      YAxis,
+      CartesianGrid,
+      Tooltip,
+      ResponsiveContainer
+    } = Recharts;
 
-  const syncToCloud = async (newData, newTabs) => {
-    if (!user) return;
-    const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'dashboard_state', 'main');
-    try {
-      await setDoc(docRef, { 
-        data: newData || data, 
-        tabs: newTabs || tabs,
-        lastUpdated: new Date().toISOString()
-      });
-    } catch (err) {
-      console.error("Error saving to cloud:", err);
-    }
-  };
+    const {
+      initializeApp,
+      getFirestore,
+      collection,
+      addDoc,
+      onSnapshot,
+      query,
+      deleteDoc,
+      doc,
+      updateDoc,
+      getAuth,
+      signInAnonymously,
+      onAuthStateChanged
+    } = window.firebaseModules;
 
-  const stats = useMemo(() => {
-    const progReach = data.program?.reduce((acc, c) => acc + (Number(c.pm) || 0), 0) || 0;
-    const contentReach = (data.copywriting?.length || 0) * 250; 
-    const totalReach = progReach + contentReach;
-
-    const totalKpi = data.program?.reduce((acc, c) => acc + (Number(c.kpi) || 0), 0) || 0;
-    const avgKpi = data.program?.length > 0 ? Math.round(totalKpi / data.program.length) : 0;
-
-    const allTasks = Object.values(data).flat();
-    const completedOrOnTrack = allTasks.filter(t => 
-      ['On Track', 'Excellent', 'High Performance', 'Editing'].includes(t.status)
-    ).length;
-    const productivity = allTasks.length > 0 ? Math.round((completedOrOnTrack / allTasks.length) * 100) : 0;
-
-    const highAlertCount = allTasks.filter(t => t.status === 'High Alert' || t.status === 'Overdue').length;
-    const healthScore = Math.max(0, productivity - (highAlertCount * 5));
-
-    return { reach: totalReach, kpi: avgKpi, productivity, health: healthScore };
-  }, [data]);
-
-  const handleAddNewDivisi = async (e) => {
-    e.preventDefault();
-    if (!newDivisiName.trim()) return;
-    const newId = newDivisiName.toLowerCase().replace(/\s+/g, '-');
-    
-    if (tabs.some(tab => tab.id === newId)) {
-        setIsModalDivisiOpen(false);
-        return;
-    }
-
-    const updatedTabs = [...tabs, { id: newId, label: newDivisiName, iconName: 'briefcase' }];
-    const updatedData = { ...data, [newId]: [] };
-    
-    setTabs(updatedTabs);
-    setData(updatedData);
-    await syncToCloud(updatedData, updatedTabs);
-
-    setNewDivisiName('');
-    setIsModalDivisiOpen(false);
-    setActiveDivisi(newId);
-  };
-
-  const handleAddTask = async (e) => {
-    e.preventDefault();
-    const newItem = {
-      id: `${activeDivisi}-${Date.now()}`,
-      ...taskForm,
+    // FIREBASE CONFIG
+    const firebaseConfig = {
+      apiKey: "ISI_API_KEY",
+      authDomain: "ISI_AUTH_DOMAIN",
+      projectId: "ISI_PROJECT_ID",
+      storageBucket: "ISI_STORAGE_BUCKET",
+      messagingSenderId: "ISI_SENDER_ID",
+      appId: "ISI_APP_ID"
     };
-    
-    const updatedData = { ...data, [activeDivisi]: [newItem, ...data[activeDivisi]] };
-    setData(updatedData);
-    await syncToCloud(updatedData);
 
-    setIsModalTaskOpen(false);
-    setTaskForm({ status: 'On Track' });
-  };
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const auth = getAuth(app);
 
-  const handleDeleteItem = async (divisiId, itemId) => {
-    const updatedDivisiData = data[divisiId].filter(item => item.id !== itemId);
-    const updatedData = { ...data, [divisiId]: updatedDivisiData };
-    setData(updatedData);
-    await syncToCloud(updatedData);
-  };
+    const PRODUCT_VARIANTS = [
+      "Pisang",
+      "Melon",
+      "Stroberi",
+      "Mangga",
+      "Anggur"
+    ];
 
-  const runAiAnalysis = () => {
-    setAiLoading(true);
-    setShowAiInsight(true);
-    setTimeout(() => {
-      const alert = Object.values(data).flat().find(t => t.status === 'High Alert' || t.status === 'Overdue');
-      setAiAnalysis(`Analisis Resmi: Organisasi memiliki Health Score ${stats.health}%. ${alert ? `Prioritas utama adalah menangani '${alert.name || alert.title || alert.campaign}' yang berstatus High Alert.` : 'Kinerja stabil.'}`);
-      setAiLoading(false);
-    }, 1500);
-  };
+    function App() {
 
-  return (
-    <div className="min-h-screen bg-[#F8FAFC] text-slate-900 font-sans">
-      <header className="fixed top-0 left-0 right-0 h-20 bg-[#0F172A] text-white z-50 px-8 flex items-center justify-between shadow-xl">
-        <div className="flex items-center gap-4">
-          <div className="bg-blue-600 p-2 rounded-xl shadow-lg shadow-blue-500/20"><BarChart3 size={24} /></div>
-          <div>
-            <h1 className="text-lg font-black tracking-tight italic">ManagerHub <span className="text-blue-500">PRO</span></h1>
-            <p className="text-[10px] text-blue-400 font-bold tracking-widest uppercase mt-1">Lembaga Performance System</p>
-          </div>
-        </div>
-        <nav className="hidden lg:flex items-center gap-1 bg-slate-800/40 p-1 rounded-2xl border border-slate-700/50 overflow-x-auto max-w-[50%] scrollbar-hide">
-          {tabs.map((tab) => (
-            <button 
-              key={tab.id} 
-              onClick={() => setActiveDivisi(tab.id)}
-              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap ${activeDivisi === tab.id ? 'bg-blue-600 text-white shadow-lg' : 'text-slate-400 hover:text-white hover:bg-slate-700/50'}`}
+      const [user, setUser] = useState(null);
+      const [penjualan, setPenjualan] = useState([]);
+      const [formData, setFormData] = useState({});
+      const [isModalOpen, setIsModalOpen] = useState(false);
+
+      useEffect(() => {
+
+        signInAnonymously(auth);
+
+        const unsubAuth = onAuthStateChanged(auth, (u) => {
+          setUser(u);
+        });
+
+        const q = query(collection(db, "penjualan"));
+
+        const unsubData = onSnapshot(q, (snapshot) => {
+          const data = snapshot.docs.map(doc => ({
+            id: doc.id,
+            ...doc.data()
+          }));
+
+          setPenjualan(data);
+        });
+
+        return () => {
+          unsubAuth();
+          unsubData();
+        };
+
+      }, []);
+
+      const totalOmzet = useMemo(() => {
+        return penjualan.reduce((a, b) => a + (b.total || 0), 0);
+      }, [penjualan]);
+
+      const handleSave = async (e) => {
+        e.preventDefault();
+
+        await addDoc(collection(db, "penjualan"), {
+          ...formData,
+          createdAt: new Date().toISOString()
+        });
+
+        setFormData({});
+        setIsModalOpen(false);
+      };
+
+      const handleDelete = async (id) => {
+        await deleteDoc(doc(db, "penjualan", id));
+      };
+
+      const formatIDR = (val) => {
+        return new Intl.NumberFormat("id-ID", {
+          style: "currency",
+          currency: "IDR",
+          maximumFractionDigits: 0
+        }).format(val || 0);
+      };
+
+      return (
+        <div className="min-h-screen p-8">
+
+          <div className="flex justify-between items-center mb-8">
+            <div>
+              <h1 className="text-4xl font-black text-indigo-600">
+                ES KULKUL PRO
+              </h1>
+              <p className="text-slate-500">
+                Dashboard Bisnis Modern
+              </p>
+            </div>
+
+            <button
+              onClick={() => setIsModalOpen(true)}
+              className="bg-indigo-600 text-white px-6 py-3 rounded-2xl font-bold"
             >
-              <IconRenderer iconName={tab.iconName} /> {tab.label}
+              Tambah Data
             </button>
-          ))}
-        </nav>
-        <div className="flex items-center gap-4">
-          <div className="flex items-center gap-2 mr-2">
-             <div className={`w-2 h-2 rounded-full ${user ? 'bg-green-500' : 'bg-red-500'}`}></div>
-             <span className="text-[10px] font-bold text-slate-400 uppercase">{user ? 'Cloud Active' : 'Offline'}</span>
           </div>
-          <div className="w-10 h-10 rounded-full bg-blue-600 border-2 border-slate-700 flex items-center justify-center font-bold">M</div>
-        </div>
-      </header>
 
-      <main className="pt-28 pb-12 px-8 max-w-7xl mx-auto">
-        <div className="flex justify-between items-end mb-8">
-          <div>
-            <h2 className="text-2xl font-black text-slate-800 tracking-tight">{activeDivisi === 'overview' ? 'Sistem Manajemen Terpadu' : `Monitoring: ${tabs.find(t => t.id === activeDivisi)?.label}`}</h2>
-            <p className="text-slate-500 text-sm">Data tersimpan otomatis secara real-time.</p>
-          </div>
-          <div className="flex items-center gap-2 text-xs font-bold text-slate-400 bg-white px-4 py-2 rounded-xl shadow-sm border border-slate-100">
-            <Clock size={14} className="text-blue-500"/> {new Date().toLocaleDateString()}
-          </div>
-        </div>
+          {/* CARD */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
 
-        {activeDivisi === 'overview' ? (
-           <div className="space-y-6 animate-in fade-in duration-700">
-           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-             <StatCard icon={<Users size={20}/>} label="Total Reach" value={stats.reach.toLocaleString()} sub="Program & Content" color="border-blue-500" />
-             <StatCard icon={<Target size={20}/>} label="Avg KPI" value={`${stats.kpi}%`} sub="Capaian Lembaga" color="border-emerald-500" />
-             <StatCard icon={<Activity size={20}/>} label="Productivity" value={`${stats.productivity}%`} sub="Tasks vs Deadline" color="border-purple-500" />
-             <StatCard icon={<TrendingUp size={20}/>} label="Health Score" value={`${stats.health}%`} sub="Overall Status" color="border-orange-500" />
-           </div>
-           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-             <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
-               <h3 className="font-bold text-slate-800 flex items-center gap-2 mb-6"><AlertCircle className="text-rose-500" size={18}/> Monitoring High Alert</h3>
-               <div className="space-y-4 max-h-[350px] overflow-y-auto pr-2">
-                 {Object.entries(data).flatMap(([divKey, items]) => 
-                   items.filter(item => ['High Alert', 'Overdue', 'Slow Response', 'Low CTR'].includes(item.status))
-                   .map(item => (
-                     <AlertItem key={item.id} title={item.name || item.title || item.campaign} issue={item.status} type={divKey.toUpperCase()} />
-                   ))
-                 )}
-                 {Object.values(data).flat().filter(t => ['High Alert', 'Overdue', 'Slow Response', 'Low CTR'].includes(t.status)).length === 0 && (
-                   <div className="text-center py-12 text-slate-400 text-sm border-2 border-dashed border-slate-100 rounded-2xl">Semua performa tim sesuai standar.</div>
-                 )}
-               </div>
-             </div>
-             <div className="bg-[#0F172A] text-white p-6 rounded-2xl shadow-xl border border-slate-700">
-               <div className="flex items-center gap-2 mb-4">
-                 <div className="p-2 bg-blue-500 rounded-lg"><Sparkles size={18} /></div>
-                 <h3 className="font-bold text-lg">AI Assistant</h3>
-               </div>
-               {showAiInsight && (
-                 <div className="bg-slate-800/50 p-4 rounded-xl border border-slate-700 text-sm text-slate-300 italic mb-4">
-                   {aiLoading ? "Menganalisis..." : aiAnalysis}
-                 </div>
-               )}
-               <button onClick={runAiAnalysis} className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl transition-all">
-                 {aiLoading ? "Menganalisis..." : "Generate Insights"}
-               </button>
-             </div>
-           </div>
-         </div>
-        ) : (
-          <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm animate-in slide-in-from-bottom-4">
-            <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
-              <h3 className="font-bold text-slate-800">Basis Data Divisi</h3>
-              <button onClick={() => setIsModalTaskOpen(true)} className="flex items-center gap-2 bg-slate-900 text-white px-4 py-2 rounded-xl text-xs font-bold shadow-lg shadow-slate-200">
-                <PlusCircle size={16}/> Input Data Baru
-              </button>
+            <div className="bg-white rounded-3xl p-6 shadow">
+              <p className="text-slate-400 text-sm">
+                Total Omzet
+              </p>
+
+              <h2 className="text-3xl font-black mt-2 text-indigo-600">
+                {formatIDR(totalOmzet)}
+              </h2>
             </div>
-            <div className="overflow-x-auto">
-              <table className="w-full text-left">
-                <thead>
-                  <tr className="text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-100">
-                    <th className="px-6 py-4">Informasi</th>
-                    <th className="px-6 py-4">Detail</th>
-                    <th className="px-6 py-4">KPI/Skor</th>
-                    <th className="px-6 py-4">Status</th>
-                    <th className="px-6 py-4 text-right">Aksi</th>
+
+          </div>
+
+          {/* CHART */}
+          <div className="bg-white rounded-3xl p-6 shadow mb-8">
+
+            <h3 className="font-bold mb-4">
+              Tren Penjualan
+            </h3>
+
+            <div className="h-[300px]">
+
+              <ResponsiveContainer width="100%" height="100%">
+
+                <AreaChart data={penjualan}>
+
+                  <CartesianGrid strokeDasharray="3 3" />
+
+                  <XAxis dataKey="tanggal" />
+
+                  <YAxis />
+
+                  <Tooltip />
+
+                  <Area
+                    type="monotone"
+                    dataKey="total"
+                    stroke="#4f46e5"
+                    fill="#4f46e533"
+                  />
+
+                </AreaChart>
+
+              </ResponsiveContainer>
+
+            </div>
+          </div>
+
+          {/* TABLE */}
+          <div className="bg-white rounded-3xl overflow-hidden shadow">
+
+            <table className="w-full">
+
+              <thead className="bg-slate-100">
+                <tr>
+                  <th className="p-4 text-left">Produk</th>
+                  <th className="p-4 text-left">Tanggal</th>
+                  <th className="p-4 text-left">Total</th>
+                  <th className="p-4 text-left">Aksi</th>
+                </tr>
+              </thead>
+
+              <tbody>
+
+                {penjualan.map((item) => (
+
+                  <tr key={item.id} className="border-t">
+
+                    <td className="p-4">
+                      {item.produk}
+                    </td>
+
+                    <td className="p-4">
+                      {item.tanggal}
+                    </td>
+
+                    <td className="p-4 font-bold text-indigo-600">
+                      {formatIDR(item.total)}
+                    </td>
+
+                    <td className="p-4">
+
+                      <button
+                        onClick={() => handleDelete(item.id)}
+                        className="bg-red-500 text-white px-4 py-2 rounded-xl"
+                      >
+                        Hapus
+                      </button>
+
+                    </td>
+
                   </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-50">
-                  {(data[activeDivisi] || []).map(row => (
-                    <tr key={row.id} className="hover:bg-slate-50/50 transition-colors">
-                      <td className="px-6 py-4 font-bold text-slate-700">{row.name || row.title || row.campaign}</td>
-                      <td className="px-6 py-4 text-sm text-slate-600">{row.pm ? `${row.pm}/${row.target}` : (row.leads || row.type || row.platform || "-")}</td>
-                      <td className="px-6 py-4 font-black text-slate-800 text-sm">{row.kpi ? `${row.kpi}%` : (row.responseTime || row.viralScore || row.ctr || row.conversion || "-")}</td>
-                      <td className="px-6 py-4"><StatusBadge status={row.status} /></td>
-                      <td className="px-6 py-4 text-right">
-                        <div className="flex items-center justify-end gap-2">
-                          <button onClick={() => handleDeleteItem(activeDivisi, row.id)} className="p-2 text-slate-300 hover:text-rose-500 rounded-lg"><Trash2 size={16}/></button>
-                          <button className="p-2 text-slate-300"><MoreHorizontal size={18}/></button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        )}
 
-        {isModalTaskOpen && (
-          <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[110] flex items-center justify-center p-4">
-            <div className="bg-white rounded-3xl w-full max-w-md shadow-2xl animate-in zoom-in-95">
-              <div className="p-6 border-b border-slate-100 flex justify-between items-center">
-                <h3 className="font-black text-slate-800">Form Input Data</h3>
-                <button onClick={() => setIsModalTaskOpen(false)} className="text-slate-400"><X size={20} /></button>
-              </div>
-              <form onSubmit={handleAddTask} className="p-6 space-y-4">
-                <Input label="Nama / Judul" placeholder="..." onChange={v => setTaskForm({...taskForm, name: v, title: v, campaign: v})} required />
-                <Input label="Detail Info" placeholder="..." onChange={v => setTaskForm({...taskForm, leads: v, type: v, platform: v, pm: v})} />
-                <Input label="Target/KPI/Skor" placeholder="..." onChange={v => setTaskForm({...taskForm, kpi: v, responseTime: v, viralScore: v, ctr: v, target: v})} />
-                <div>
-                  <label className="text-[10px] font-black text-slate-400 uppercase block mb-1">Status</label>
-                  <select 
-                    className="w-full px-4 py-2 bg-slate-50 border rounded-xl outline-none"
-                    onChange={e => setTaskForm({...taskForm, status: e.target.value})}
-                    value={taskForm.status}
+                ))}
+
+              </tbody>
+
+            </table>
+
+          </div>
+
+          {/* MODAL */}
+          {isModalOpen && (
+
+            <div className="fixed inset-0 bg-black/50 flex items-center justify-center">
+
+              <div className="bg-white p-8 rounded-3xl w-full max-w-md">
+
+                <h3 className="text-2xl font-black mb-6">
+                  Tambah Penjualan
+                </h3>
+
+                <form onSubmit={handleSave} className="space-y-4">
+
+                  <select
+                    className="w-full border rounded-2xl p-4"
+                    value={formData.produk || ""}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        produk: e.target.value
+                      })
+                    }
                   >
-                    <option value="On Track">On Track</option>
-                    <option value="High Alert">High Alert</option>
-                    <option value="Excellent">Excellent</option>
+                    <option value="">Pilih Produk</option>
+
+                    {PRODUCT_VARIANTS.map(v => (
+                      <option key={v} value={v}>
+                        {v}
+                      </option>
+                    ))}
+
                   </select>
-                </div>
-                <button type="submit" className="w-full bg-slate-900 text-white py-3 rounded-xl font-bold mt-4">Simpan Data</button>
-              </form>
-            </div>
-          </div>
-        )}
 
-        {isModalDivisiOpen && (
-          <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[110] flex items-center justify-center p-4">
-            <div className="bg-white rounded-3xl w-full max-w-md shadow-2xl animate-in zoom-in-95">
-              <div className="p-6 border-b border-slate-100 flex justify-between items-center">
-                <h3 className="font-black text-slate-800">Departemen Baru</h3>
-                <button onClick={() => setIsModalDivisiOpen(false)} className="text-slate-400"><X size={20} /></button>
+                  <input
+                    type="date"
+                    className="w-full border rounded-2xl p-4"
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        tanggal: e.target.value
+                      })
+                    }
+                  />
+
+                  <input
+                    type="number"
+                    placeholder="Total"
+                    className="w-full border rounded-2xl p-4"
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        total: Number(e.target.value)
+                      })
+                    }
+                  />
+
+                  <button
+                    type="submit"
+                    className="w-full bg-indigo-600 text-white py-4 rounded-2xl font-bold"
+                  >
+                    Simpan
+                  </button>
+
+                </form>
+
               </div>
-              <form onSubmit={handleAddNewDivisi} className="p-6 space-y-4">
-                <Input label="Nama Departemen" value={newDivisiName} onChange={setNewDivisiName} required />
-                <button type="submit" className="w-full bg-blue-600 text-white py-3 rounded-xl font-bold">Aktifkan</button>
-              </form>
+
             </div>
-          </div>
-        )}
 
-        <button onClick={() => setIsModalDivisiOpen(true)} className="fixed bottom-8 right-8 bg-blue-600 text-white p-4 rounded-2xl shadow-2xl hover:scale-110 transition-transform flex items-center gap-2 font-bold z-40">
-          <Plus size={24} /> <span>Tambah Divisi</span>
-        </button>
-      </main>
-    </div>
-  );
-};
+          )}
 
-const Input = ({ label, onChange, ...props }) => (
-  <div>
-    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1">{label}</label>
-    <input className="w-full px-4 py-2 rounded-xl border bg-slate-50 outline-none text-sm font-bold focus:border-blue-500" onChange={e => onChange(e.target.value)} {...props} />
-  </div>
-);
+        </div>
+      );
+    }
 
-const StatCard = ({ icon, label, value, sub, color }) => (
-  <div className={`bg-white p-6 rounded-2xl border-l-4 ${color} shadow-sm group`}>
-    <div className="text-slate-400 mb-2 group-hover:text-slate-600">{icon}</div>
-    <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{label}</h4>
-    <div className="text-2xl font-black text-slate-800 my-1">{value}</div>
-    <p className="text-[10px] text-slate-500 font-bold uppercase">{sub}</p>
-  </div>
-);
+    const root = ReactDOM.createRoot(document.getElementById("root"));
+    root.render(<App />);
 
-const AlertItem = ({ title, issue, type }) => (
-  <div className="flex items-center gap-4 p-3 bg-rose-50 rounded-xl border border-rose-100">
-    <div className="bg-rose-500 text-white p-2 rounded-lg"><AlertCircle size={14}/></div>
-    <div className="flex-1">
-      <div className="flex justify-between items-center"><h5 className="text-xs font-bold text-slate-800">{title}</h5><span className="text-[9px] font-black uppercase text-rose-500">{type}</span></div>
-      <p className="text-[11px] text-rose-600 font-bold italic">Status: {issue}</p>
-    </div>
-  </div>
-);
-
-const StatusBadge = ({ status }) => {
-  const styles = {
-    'On Track': 'bg-emerald-50 text-emerald-600 border-emerald-100',
-    'Excellent': 'bg-emerald-50 text-emerald-600 border-emerald-100',
-    'High Alert': 'bg-rose-50 text-rose-600 border-rose-100',
-  };
-  return <span className={`px-3 py-1 rounded-full text-[10px] font-bold border ${styles[status] || 'bg-slate-50'}`}>{status}</span>;
-};
-
-export default App;
+  </script>
+</body>
+</html>
